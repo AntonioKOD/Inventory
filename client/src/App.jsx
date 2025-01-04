@@ -6,8 +6,8 @@ import  BottomNavbar from './components/NavBar.jsx'
 
 
 const httpLink = createHttpLink({
-  uri: 'graphql'
-})
+  uri: 'http://localhost:3000/graphql', // Absolute URL to your GraphQL endpoint
+});
 
 const authLink = setContext((_, {headers}) => {
   const token = localStorage.getItem('id_token')
@@ -32,9 +32,9 @@ function App() {
     <ApolloProvider client={client}>
       <>
       
-        
+      <BottomNavbar/>
         <Outlet/>
-        <BottomNavbar/>
+        
       </>
     </ApolloProvider>
 

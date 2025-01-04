@@ -1,5 +1,6 @@
 const {User, Restaurant, Liquor, Empty} = require('../models')
 const {signToken} = require('../utils/auth')
+const bcrypt  = require('bcryptjs')
 
 const resolvers = {
     Query: {
@@ -13,21 +14,49 @@ const resolvers = {
             const liquor = await Liquor.find()
             return liquor
         },
-        me: async(parent, args, context)=> {
-            if(context.user){
-                const user = await User.findOne({_id: context.user._id})
-                const restaurant = await Restaurant({addmin: context.user._id})
-                    .populate('managers')
-                    .populate('liquors')   
-                return {user, restaurant}
+        me: async (parent, args, context) => {
+            if (!context.user) {
+                throw new Error('Authentication required');
             }
-        }
+        
+            // Fetch the user from the database
+            const user = await User.findOne({_id:context.user._id})
+            if (!user) {
+                throw new Error('User not found');
+            }
+            // Fetch the restaurant based on user role
+          
+            return user;
+        },
+        getRestaurant: async (_, __, context) => {
+            
+            if(!context.user){
+                throw new Error('Auth required')
+            }
+        
+            const user = await User.findOne({_id: context.user._id})
+            let query = {};
+            if (user.role === 'admin') {
+                query = { admin: user._id };
+            } else if (user.role === 'manager') {
+                query = { managers: { $in: [user._id] } };
+            }
+            const restaurant = await Restaurant.findOne(query)
+            .populate('admin', 'username email role') // Ensure 'username' is included
+            .populate('managers', '_id username email role')
+            .populate('liquors', '_id name stock price');
+            return restaurant
+        },
+
+        
+        
     },
     Mutation: {
-        addLiquor: async(parent, {input, restaurantId}, context)=>{
+        addLiquor: async(parent, {input}, context)=>{
             
+            const user = await User.findOne({_id: context.user._id})
 
-            const restaurant = await Restaurant.findById(restaurantId)
+            const restaurant = await Restaurant.findOne({admin: user._id})
             
             const newLiquor = await Liquor.create(input)
 
@@ -48,7 +77,10 @@ const resolvers = {
             }
         
             // Fetch the restaurant linked to this admin
-            const restaurant = await Restaurant.findOne({ admin: user._id }).populate('admin', 'username email');
+            const restaurant = await Restaurant.findOne({ admin: user._id })
+            .populate('admin', '_id username email role')
+            .populate('managers', '_id username email role')
+            .populate('liquors', '_id name stock price')
         
             const token = signToken(user);
         
@@ -92,22 +124,24 @@ const resolvers = {
             const token = signToken(newUser);
         
             // Populate the admin field for the restaurant before returning
-            const populatedRestaurant = await Restaurant.findById(newRestaurant._id).populate('admin', 'username email');
+            const populatedRestaurant = await Restaurant.findById(newRestaurant._id).populate('admin', 'username email role');
         
             return { token, user: newUser, restaurant: populatedRestaurant };
         },
         createUserAsAdmin: async(parent, {username, email, password, role, restaurantId}, context)=> {
-            const requestingUser = context.user;
+            const requestingUser = await User.findOne({_id: context.user._id});
+            console.log(requestingUser)
+            console.log(requestingUser)
             if(!requestingUser || requestingUser.role !== 'admin' ){
                 throw new Error('You must be an admin to create a user')
             }
-            const restaurant = await Restaurant.findById(restaurantId)
+            const restaurant = await Restaurant.findOne({admin: requestingUser._id})
             if(!restaurant){
                 throw new Error('Restaurant not Found')
             }
 
             if(String(restaurant.admin) !== String(requestingUser._id)){
-                throw new Error('You are now authorized to manage users')
+                throw new Error('You are not authorized to manage users')
             }
 
             const existingUser = await User.findOne({email})

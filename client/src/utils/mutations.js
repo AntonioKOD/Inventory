@@ -27,66 +27,38 @@ mutation Login($email: String!, $password: String!){
 export const REGISTER = gql`
     mutation registerUserAndRestaurant($input: restaurantInput){
         registerUserAndRestaurant(input: $input){
-            restaurant{
-                _id
-                address
-                admin{
-                    username
-                    _id
-                    email
-                }
-                liquors{
-                    _id
-                    category
-                    name
-                    price
-                    stock
-
-                }
-                managers{
-                    username
-                    _id
-                    email
-                }
-                name
-                state
-            }
-            token
-            user{
-                _id
-                username
-                role
-                email
-            }
-
-        }
-    }
-`
-
-export const DELETE_LIQUOR = gql`
- mutation deleteLiquor($_id: ID!){
-    removeLiquor(_id: $_id){
+            restaurant {
+      liquors {
         _id
+        category
+        name
+        price
+        stock
+      }
+      address
+      _id
+      admin {
+        email
+        _id
+        username
+        role
+      }
+      managers {
+        username
+        role
+        email
+        _id
+      }
+      name
+      state
     }
- }
-`
-
-export const EMPTY_BOTTLES = gql`
-    mutation setEmptyBottles($input: [EmptyBottles!]!){
-        setEmptyBottles(input: $input){
-            _id 
-            date
-            emptyBottles{
-                liquor{
-                    _id
-                    category
-                    name
-                    price
-                    stock
-
-                }
-                quantity
-            }
+    token
+    user {
+      _id
+      email
+      role
+      username
+    }
         }
     }
 `
@@ -105,13 +77,22 @@ export const UPDATE_STOCK = gql`
 `
 
 export const CREATE_USER = gql`
-    mutation createUserAsAdmin($username: String!, $email: String!, $password: String!, $role: String!, $restaurantId: ID!){
-        createUserAsAdmin(username: $username, email: $email, password: $password, role: $role, restaurantId: $restaurantId){
+    mutation createUserAsAdmin($username: String!, $email: String!, $password: String!, $role: String!){
+        createUserAsAdmin(username: $username, email: $email, password: $password, role: $role){
             _id
             email
             password
             role
             username
+        }
+    }
+`
+
+export const EMPTY_BOTTLES = gql`
+    mutation setEmptyBottles($input: [EmptyBottles!]!){
+        setEmptyBottles(input: $input){
+            _id
+            emptyBottles
         }
     }
 `

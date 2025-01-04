@@ -49,6 +49,7 @@ const typeDefs = `
         getBottles(date: String): [Empty]
         me: User
         getLiquors: [Liquor]
+        getRestaurant: Restaurant
         
 
     }
@@ -74,12 +75,12 @@ const typeDefs = `
     }
 
     type Mutation { 
-        addLiquor(input: LiquorInput!, restaurantId: ID!): Liquor
+        addLiquor(input: LiquorInput!): Liquor
         login(email: String!, password: String!): Auth
         registerUserAndRestaurant(input: restaurantInput): Auth
         removeLiquor(_id: ID!): Liquor
         setEmptyBottles(input: [EmptyBottles!]!): [Empty!]!
-        createUserAsAdmin(username:String!, email: String!,password: String!, role: String!, restaurantId: ID!): User
+        createUserAsAdmin(username:String!, email: String!,password: String!, role: String!): User
         updateStock(stock: Int!, _id: ID!): Liquor!
     }
 

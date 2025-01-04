@@ -9,6 +9,10 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { ThemeProvider, createTheme } from '@mui/material'
+import Signup from './components/Signup.jsx'
+import Login from './components/Login.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import Manager from './pages/Manager.jsx'
 
 const theme = createTheme({
   palette: {
@@ -35,6 +39,22 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Home/>
+      },
+      {
+        path: '/signup',
+        element: <Signup/>
+      },
+      {
+        path: '/login',
+        element: <Login/>
+      },
+      {
+        path: 'dashboard',
+        element: <Dashboard/>
+      },
+      {
+        path: 'managerDashboard',
+        element: <Manager/>
       }
     ]
   }
