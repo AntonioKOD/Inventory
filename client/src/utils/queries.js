@@ -53,3 +53,34 @@ export const GET_LIQUORS = gql`
     }
 `
 
+export const GET_LIQUOR = gql`
+    query getLiquor($searchTerm: String!){
+        getLiquor(searchTerm: $searchTerm){
+            _id
+            name
+            stock
+            price
+            category
+        }
+    }
+`
+
+export const GET_EMPTY = gql`
+    query getEmptyRecords{
+        getEmptyRecords{
+            _id 
+            date
+            emptyBottles{
+                liquor{
+                    _id
+                    name
+                    price
+                    category
+                }
+                quantity
+            }
+        }
+    }
+`
+
+

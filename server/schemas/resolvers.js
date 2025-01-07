@@ -4,6 +4,7 @@ const bcrypt  = require('bcryptjs')
 
 const resolvers = {
     Query: {
+
         getBottles: async(parent, {date}, context)=>{
             const bottles = await Empty.find(date)
                 .populate('emptyBottles')
@@ -47,6 +48,22 @@ const resolvers = {
             .populate('liquors', '_id name stock price');
             return restaurant
         },
+        getLiquor: async (parent, { searchTerm }) => {
+            try {
+                const liquors = await Liquor.find({
+                    name: { $regex: new RegExp(searchTerm, "i") }, // Case-insensitive regex search
+                });
+                return liquors;
+            } catch (error) {
+                console.error("Error in getLiquor resolver:", error);
+                throw new Error("Failed to fetch liquor details.");
+            }
+        },
+        getEmptyRecords: async(parent, args, context)=> {
+            const empty = await Empty.find().populate('emptyBottles.liquor')
+            console.log(empty)
+            return empty
+        }
 
         
         
@@ -167,57 +184,70 @@ const resolvers = {
 
         },
         setEmptyBottles: async (parent, { input }, context) => {
-           // if (!context.user) {
-             //   throw new Error('You need to be logged in to set the empty bottles');
-            //}
-        
             const now = new Date();
             let effectiveDate = new Date(now);
         
-            // Adjust date if time is between midnight and 2 AM
             if (now.getHours() < 2) {
                 effectiveDate.setDate(now.getDate() - 1);
             }
-        
             effectiveDate.setHours(0, 0, 0, 0);
         
-            // Check if an empty record exists for the effective date
-            let emptyRecord = await Empty.findOne({ date: effectiveDate });
-            if (!emptyRecord) {
-                emptyRecord = await Empty.create({
-                    date: effectiveDate,
-                    emptyBottles: [],
-                });
-            }
-        
-            // Update or add empty bottles for each liquor
-            for (const { liquorId, emptyBottles } of input) {
-                const liquor = await Liquor.findById(liquorId);
-                if (!liquor) {
-                    throw new Error(`Liquor with ID ${liquorId} is not found`);
+            try {
+                // Find or create the Empty record
+                let emptyRecord = await Empty.findOne({ date: effectiveDate });
+                if (!emptyRecord) {
+                    emptyRecord = await Empty.create({ date: effectiveDate, emptyBottles: [] });
+                    if (!emptyRecord._id) {
+                        throw new Error('Failed to create Empty record. Missing _id.');
+                    }
                 }
-
-                liquor.stock -= emptyBottles;
-                await liquor.save()
         
-                const liquorEntry = emptyRecord.emptyBottles.find(
-                    (bottle) => String(bottle.liquor) === String(liquor._id)
+                const bottleMap = new Map(
+                    emptyRecord.emptyBottles.map((bottle) => [String(bottle.liquor), bottle])
                 );
         
-                if (liquorEntry) {
-                    liquorEntry.quantity += emptyBottles;
-                } else {
-                    emptyRecord.emptyBottles.push({
-                        liquor: liquor._id,
-                        quantity: emptyBottles,
-                    });
-                }
-            }
+                // Process input
+                for (const { liquorId, emptyBottles } of input) {
+                    if (typeof emptyBottles !== 'number' || emptyBottles < 0) {
+                        throw new Error('Invalid value for empty bottles. Must be a non-negative number.');
+                    }
         
-            await emptyRecord.save();
-            const populatedRecord = await Empty.findById(emptyRecord._id).populate('emptyBottles.liquor');
-
-            return [populatedRecord];
+                    const liquor = await Liquor.findById(liquorId);
+                    if (!liquor) {
+                        throw new Error(`Liquor with ID ${liquorId} not found`);
+                    }
+        
+                    if (liquor.stock < emptyBottles) {
+                        throw new Error(`Insufficient stock for liquor ID ${liquorId}`);
+                    }
+        
+                    liquor.stock -= emptyBottles;
+                    await liquor.save();
+        
+                    if (bottleMap.has(String(liquorId))) {
+                        bottleMap.get(String(liquorId)).quantity += emptyBottles;
+                    } else {
+                        emptyRecord.emptyBottles.push({
+                            liquor: liquorId,
+                            quantity: emptyBottles,
+                        });
+                    }
+                }
+        
+                // Save the updated Empty record
+                await emptyRecord.save();
+        
+                // Populate and return the record
+                const populatedRecord = await Empty.findById(emptyRecord._id).populate('emptyBottles.liquor');
+                if (!populatedRecord._id) {
+                    throw new Error('Failed to fetch Empty record. Missing _id.');
+                }
+        
+                return [populatedRecord];
+            } catch (error) {
+                console.error('Error in setEmptyBottles:', error);
+                throw new Error('Failed to update empty bottles.');
+            }
         },
         removeLiquor: async(parent, {_id}, context)=> {
            
@@ -228,14 +258,13 @@ const resolvers = {
             await Liquor.deleteOne({_id})
             return deleteLiquor
         },
-        updateStock: async(parent, {stock, _id},context)=> {
-            const liquor = await Liquor.findByIdAndUpdate( _id, {
+        updateStock: async(parent, {stock, id},context)=> {
+            const liquor = await Liquor.findByIdAndUpdate( id, {
                  stock
             },
             {new: true}
         )
-            
-
+    
             return liquor
 
         }

@@ -7,23 +7,25 @@ import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
-import Auth from '../utils/auth'; // Ensure this is the correct import path for Auth
+import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { ME } from '../utils/queries';
-
-
+import { Autocomplete, TextField } from '@mui/material';
+import { useState } from 'react';
+import SearchIcon from '@mui/icons-material/Search';
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
-  const {loading,error, data} = useQuery(ME);
-  
- 
-  const user = data?.me;
+  const [searchTerm, setSearchTerm] = useState('');
+  const { loading, data } = useQuery(ME);
 
+  const navigate = useNavigate();
+
+  const user = data?.me;
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -32,18 +34,22 @@ function ResponsiveAppBar() {
   const handleCloseNavMenu = () => {
     setAnchorElNav(null);
   };
-  if(loading) return <h1>Loading</h1>
-  if(error){
-    console.error('Error: ', error.message)
-  }
 
-  console.log(user)
+  const handleSearchChange = (event, value) => {
+    setSearchTerm(value);
+  };
+
+  const handleSearchSubmit = (event) => {
+    if (event.key === 'Enter' && searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
+    }
+  };
+
+  if (loading) return <h1>Loading...</h1>;
   
 
-
   return (
-
-    <AppBar position="fixed">
+    <AppBar position="fixed" sx={{ zIndex: 1201 }}>
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -65,8 +71,53 @@ function ResponsiveAppBar() {
             Inventory App
           </Typography>
 
+          {/* Admin-only Search Bar */}
+          {Auth.loggedIn() && user?.role === 'admin' && (
+            <Box
+              sx={{
+                flexGrow: 1,
+                mx: 2,
+                maxWidth: '600px',
+                backgroundColor: 'white',
+                borderRadius: '4px',
+                boxShadow: 1,
+              }}
+            >
+              <Autocomplete
+                freeSolo
+                id="search-bar"
+                disableClearable
+                options={[]} // Add options dynamically if needed
+                onInputChange={handleSearchChange}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    placeholder="Search"
+                    variant="outlined"
+                    onKeyDown={handleSearchSubmit}
+                    InputProps={{
+                      ...params.InputProps,
+                      sx: { paddingRight: '40px' },
+                      endAdornment: (
+                        <SearchIcon
+                          sx={{ cursor: 'pointer', marginLeft: '-35px' }}
+                          onClick={() => {
+                            if (searchTerm.trim()) {
+                              console.log(`Search initiated for: ${searchTerm}`);
+                            }
+                          }}
+                        />
+                      ),
+                    }}
+                  />
+                )}
+              />
+            </Box>
+          )}
+
           {/* Mobile Menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, flexGrow: 1 }}>
             <IconButton
               size="large"
               aria-label="account of current user"
@@ -122,7 +173,7 @@ function ResponsiveAppBar() {
           </Box>
 
           {/* Desktop Menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
             {Auth.loggedIn() ? (
               <>
                 <Button onClick={Auth.logout} sx={{ my: 2, color: 'white', display: 'block' }}>
@@ -131,18 +182,7 @@ function ResponsiveAppBar() {
                 <Link to="/me" style={{ textDecoration: 'none', color: 'white' }}>
                   <Button sx={{ my: 2, color: 'white', display: 'block' }}>My Profile</Button>
                 </Link>
-              
-              {user.role === 'admin' ? (
-              <Link to="/dashboard" style={{ textDecoration: 'none', color: 'white' }}>
-                  <Button sx={{ my: 2, color: 'white', display: 'block' }}>Dashboard</Button>
-                </Link>
-            ) : (
-              <Link to="/managerDashboard" style={{ textDecoration: 'none', color: 'white' }}>
-                  <Button sx={{ my: 2, color: 'white', display: 'block' }}>Edit Items</Button>
-                </Link>
-            )}
-            </>
-            
+              </>
             ) : (
               <>
                 <Link to="/signup" style={{ textDecoration: 'none', color: 'white' }}>
@@ -153,7 +193,6 @@ function ResponsiveAppBar() {
                 </Link>
               </>
             )}
-            
           </Box>
         </Toolbar>
       </Container>

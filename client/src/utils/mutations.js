@@ -64,16 +64,14 @@ export const REGISTER = gql`
 `
 
 export const UPDATE_STOCK = gql`
-    mutation updateStock($stock: Int!, $id: ID!){
-        updateStock(stock: $stock, _id: $id){
-            _id 
-            category
-            name
-            price
-            stock
-
-        }
+   mutation UpdateStock($id: ID!, $stock: Int!) {
+    updateStock(id: $id, stock: $stock) {
+        _id
+        name
+        stock
+        
     }
+}
 `
 
 export const CREATE_USER = gql`
@@ -87,12 +85,24 @@ export const CREATE_USER = gql`
         }
     }
 `
-
 export const EMPTY_BOTTLES = gql`
-    mutation setEmptyBottles($input: [EmptyBottles!]!){
-        setEmptyBottles(input: $input){
-            _id
-            emptyBottles
+  # Mutation to set the empty bottles for liquors
+  # Input: Array of EmptyBottles objects, each with liquorId and emptyBottles count
+  # Returns: Updated Empty record with date and emptyBottles details
+  mutation SetEmptyBottles($input: [EmptyBottles!]!) {
+    setEmptyBottles(input: $input) {
+      _id          # ID of the Empty record
+      date         # Date for the record
+      emptyBottles {
+        liquor {   # Liquor details for each empty bottle entry
+          _id
+          name
+          category
+          price
+          stock
         }
+        quantity   # Number of empty bottles for the liquor
+      }
     }
-`
+  }
+`;
