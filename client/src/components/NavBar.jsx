@@ -150,8 +150,8 @@ function ResponsiveAppBar() {
                     <Typography sx={{ textAlign: 'center' }}>Logout</Typography>
                   </MenuItem>
                   <MenuItem onClick={handleCloseNavMenu}>
-                    <Link to="/me" style={{ textDecoration: 'none', color: 'inherit' }}>
-                      <Typography sx={{ textAlign: 'center' }}>My Profile</Typography>
+                    <Link to="/dashboard" style={{ textDecoration: 'none', color: 'inherit' }}>
+                      <Typography sx={{ textAlign: 'center' }}>View Dashboard</Typography>
                     </Link>
                   </MenuItem>
                 </>
