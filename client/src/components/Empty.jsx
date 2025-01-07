@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client"
 import { EMPTY_BOTTLES } from "../utils/mutations"
-import { GET_LIQUORS } from "../utils/queries"
+import { GET_LIQUORS, RESTAURANT } from "../utils/queries"
 import { useState } from "react"
 import {
     Table,
@@ -16,8 +16,14 @@ import {
 
 
 
+
 export default function Empty(){
-    const {loading,error,data} = useQuery(GET_LIQUORS)
+    const{data: restaurantData} = useQuery(RESTAURANT)
+    const restaurantId = restaurantData?.getRestaurant?._id
+
+    const {loading,error,data} = useQuery(GET_LIQUORS,{
+        variables: {restaurantId}
+    })
     const [bottles, setBottles] = useState({})
     const [emptyBottles] = useMutation(EMPTY_BOTTLES)
    
@@ -40,7 +46,7 @@ export default function Empty(){
             emptyBottles: parseInt(emptyBottles, 10)
         }));
         try{
-            const {data} = await emptyBottles({variables: {input: inputArray}})
+            const {data} = await emptyBottles({variables: {input: inputArray, restaurantId}})
             console.log(data)
             setBottles({})
         }catch(err){

@@ -18,7 +18,12 @@ const emptySchema = new Schema(
             type: Number,
             required:true,
         }
-    }]
+    }],
+    restaurant: {
+        type: Schema.Types.ObjectId,
+        ref: 'Restaurant',
+        required: true,
+    },
     },
     {
         timestamps: true

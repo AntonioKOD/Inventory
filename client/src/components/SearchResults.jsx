@@ -1,16 +1,21 @@
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_LIQUOR } from "../utils/queries";
+import { GET_LIQUOR, RESTAURANT } from "../utils/queries";
 import { UPDATE_STOCK } from "../utils/mutations";
 import { useSearchParams } from "react-router-dom";
 import { Box, Typography, Card, CardContent, TextField, Button } from "@mui/material";
 import { useState } from "react";
 
+
 export default function SearchResults() {
     const [searchParams] = useSearchParams();
     const query = searchParams.get("q");
+    const { data: restaurantData } = useQuery(RESTAURANT);
+    const restaurantId = restaurantData?.getRestaurant?._id;
+    console.log(restaurantId)
     const { loading, error, data } = useQuery(GET_LIQUOR, {
         variables: {
             searchTerm: query,
+            restaurantId
         },
     });
     const [stock, setStock] = useState({

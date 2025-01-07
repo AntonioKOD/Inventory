@@ -19,6 +19,11 @@ const liquorSchema = new Schema(
             required: true,
             default: 0
         },
+        restaurant: {
+            type: Schema.Types.ObjectId,
+            ref: 'Restaurant',
+            required: true
+        }
     },
     {
         toJSON: {

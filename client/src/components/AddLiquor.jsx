@@ -1,12 +1,17 @@
 import { TextField, Box, Container, Paper, Typography, Button } from "@mui/material";
 import { useState } from "react"
 import { ADD_LIQUOR } from "../utils/mutations"
-import { useMutation } from "@apollo/client"
+import { useMutation, useQuery } from "@apollo/client"
 import Grid from '@mui/material/Grid2'
+import {RESTAURANT} from '../utils/queries'
+
 
 
 
 export default function AddLiquor(){
+
+    const {data} = useQuery(RESTAURANT)
+    const restaurantId = data?.getRestaurant?._id
 
     const[formData, setFormData] = useState({
         category: '',
@@ -34,7 +39,8 @@ export default function AddLiquor(){
                     name: formData.name,
                     price: parseFloat(formData.price),
                     stock: parseInt(formData.stock),
-                    }
+                    },
+                    restaurantId
                 }
             })
             console.log("Liquor created", data)

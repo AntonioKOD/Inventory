@@ -1,8 +1,8 @@
 import {gql} from '@apollo/client'
 
 export const ADD_LIQUOR = gql `
-    mutation addLiquor($input: LiquorInput!){
-        addLiquor(input: $input){
+    mutation addLiquor($input: LiquorInput!, $restaurantId: ID!){
+        addLiquor(input: $input, restaurantId: $restaurantId){
             _id
             name
             category
@@ -75,8 +75,8 @@ export const UPDATE_STOCK = gql`
 `
 
 export const CREATE_USER = gql`
-    mutation createUserAsAdmin($username: String!, $email: String!, $password: String!, $role: String!){
-        createUserAsAdmin(username: $username, email: $email, password: $password, role: $role){
+    mutation createUserAsAdmin($username: String!, $email: String!, $password: String!, $role: String!, $restaurantId: ID!){
+        createUserAsAdmin(username: $username, email: $email, password: $password, role: $role, restaurantId: $restaurantId){
             _id
             email
             password
@@ -89,8 +89,8 @@ export const EMPTY_BOTTLES = gql`
   # Mutation to set the empty bottles for liquors
   # Input: Array of EmptyBottles objects, each with liquorId and emptyBottles count
   # Returns: Updated Empty record with date and emptyBottles details
-  mutation SetEmptyBottles($input: [EmptyBottles!]!) {
-    setEmptyBottles(input: $input) {
+  mutation SetEmptyBottles($input: [EmptyBottles!]!, $restaurantId: ID!) {
+    setEmptyBottles(input: $input, restaurantId: $restaurantId) {
       _id          # ID of the Empty record
       date         # Date for the record
       emptyBottles {

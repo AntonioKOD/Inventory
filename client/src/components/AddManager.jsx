@@ -1,11 +1,15 @@
 import { TextField, Box, Container, Paper, Typography, Button } from "@mui/material";
 import { CREATE_USER } from "../utils/mutations";
-import { useMutation } from "@apollo/client";
+import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
 import Grid from '@mui/material/Grid2'
+import {RESTAURANT} from '../utils/queries'
+
 
 export default function AddManager(){
     const [newUser] = useMutation(CREATE_USER)
+    const {data} = useQuery(RESTAURANT)
+    const restaurantId = data?.getRestaurant?._id
     const [formData, setFormData] = useState({
         username: '',
         email: '',
@@ -31,7 +35,8 @@ export default function AddManager(){
                     username: formData.username,
                     email: formData.email,
                     password: formData.password,
-                    role: formData.role
+                    role: formData.role,
+                    restaurantId
                 }
             })
 

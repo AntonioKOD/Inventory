@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { GET_EMPTY } from "../utils/queries";
+import { GET_EMPTY, RESTAURANT } from "../utils/queries";
 import {
   Container,
   Box,
@@ -12,7 +12,13 @@ import {
 } from "@mui/material";
 
 export default function EmptyRecords() {
-  const { loading, error, data } = useQuery(GET_EMPTY);
+  const { data: restaurantData } = useQuery(RESTAURANT);
+  const restaurantId = restaurantData?.getRestaurant?._id;
+
+  const { loading, error, data } = useQuery(GET_EMPTY, {
+    variables: { restaurantId },
+    
+  });
 
   if (loading) return <Typography variant="h4">Loading...</Typography>;
   if (error) return <Typography variant="h4">{error.message}</Typography>;

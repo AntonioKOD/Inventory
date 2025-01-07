@@ -4,16 +4,22 @@ const bcrypt  = require('bcryptjs')
 
 const resolvers = {
     Query: {
-
         getBottles: async(parent, {date}, context)=>{
             const bottles = await Empty.find(date)
                 .populate('emptyBottles')
             
             return bottles
         },
-        getLiquors: async()=> {
-            const liquor = await Liquor.find()
-            return liquor
+        getLiquors: async(parent, {restaurantId}, context)=> {
+            const restaurant = await Restaurant.findOne({
+                _id: restaurantId
+            })
+            .populate('liquors')
+            if(!restaurant){
+                throw new Error('Restaurant not found')
+            }
+            return restaurant.liquors
+            
         },
         me: async (parent, args, context) => {
             if (!context.user) {
@@ -48,10 +54,16 @@ const resolvers = {
             .populate('liquors', '_id name stock price');
             return restaurant
         },
-        getLiquor: async (parent, { searchTerm }) => {
+        getLiquor: async (parent, { searchTerm, restaurantId }) => {
             try {
+                const restaurant = await Restaurant.findById(restaurantId)
+                if (!restaurant) {
+                    throw new Error('Restaurant not found');
+                }
+
                 const liquors = await Liquor.find({
-                    name: { $regex: new RegExp(searchTerm, "i") }, // Case-insensitive regex search
+                    name: { $regex: new RegExp(searchTerm, "i") },
+                    restaurant: restaurant._id
                 });
                 return liquors;
             } catch (error) {
@@ -59,9 +71,13 @@ const resolvers = {
                 throw new Error("Failed to fetch liquor details.");
             }
         },
-        getEmptyRecords: async(parent, args, context)=> {
-            const empty = await Empty.find().populate('emptyBottles.liquor')
-            console.log(empty)
+        getEmptyRecords: async(parent, {restaurantId}, context)=> {
+
+            const restaurant = await Restaurant.findById(restaurantId)
+            if(!restaurant){
+                throw new Error('Restaurant not found')
+            }
+            const empty = await Empty.find({restaurant: restaurantId}).populate('emptyBottles.liquor')
             return empty
         }
 
@@ -69,15 +85,19 @@ const resolvers = {
         
     },
     Mutation: {
-        addLiquor: async(parent, {input}, context)=>{
+        addLiquor: async(parent, {input, restaurantId}, context)=>{
             
             const user = await User.findOne({_id: context.user._id})
 
-            const restaurant = await Restaurant.findOne({admin: user._id})
+            const restaurant = await Restaurant.findOne({_id: restaurantId})
             
-            const newLiquor = await Liquor.create(input)
-
+            
+            const newLiquor = await Liquor.create({...input,
+                restaurant: restaurant._id
+            })
+            console.log(newLiquor)
             restaurant.liquors.push(newLiquor._id)
+            
             await restaurant.save()
 
             return newLiquor
@@ -147,12 +167,10 @@ const resolvers = {
         },
         createUserAsAdmin: async(parent, {username, email, password, role, restaurantId}, context)=> {
             const requestingUser = await User.findOne({_id: context.user._id});
-            console.log(requestingUser)
-            console.log(requestingUser)
             if(!requestingUser || requestingUser.role !== 'admin' ){
                 throw new Error('You must be an admin to create a user')
             }
-            const restaurant = await Restaurant.findOne({admin: requestingUser._id})
+            const restaurant = await Restaurant.findOne({_id: restaurantId})
             if(!restaurant){
                 throw new Error('Restaurant not Found')
             }
@@ -172,6 +190,7 @@ const resolvers = {
                 email, 
                 password,
                 role,
+                restaurant: restaurant._id
             })
 
             if(role === 'manager'){
@@ -183,7 +202,7 @@ const resolvers = {
             return newUser
 
         },
-        setEmptyBottles: async (parent, { input }, context) => {
+        setEmptyBottles: async (parent, { input, restaurantId }, context) => {
             const now = new Date();
             let effectiveDate = new Date(now);
         
@@ -193,10 +212,20 @@ const resolvers = {
             effectiveDate.setHours(0, 0, 0, 0);
         
             try {
-                // Find or create the Empty record
-                let emptyRecord = await Empty.findOne({ date: effectiveDate });
+                // Verify the restaurant exists
+                const restaurant = await Restaurant.findById(restaurantId);
+                if (!restaurant) {
+                    throw new Error('Restaurant not found');
+                }
+        
+                // Find or create the Empty record for the specific restaurant
+                let emptyRecord = await Empty.findOne({ date: effectiveDate, restaurant: restaurantId });
                 if (!emptyRecord) {
-                    emptyRecord = await Empty.create({ date: effectiveDate, emptyBottles: [] });
+                    emptyRecord = await Empty.create({
+                        date: effectiveDate,
+                        restaurant: restaurantId,
+                        emptyBottles: []
+                    });
                     if (!emptyRecord._id) {
                         throw new Error('Failed to create Empty record. Missing _id.');
                     }

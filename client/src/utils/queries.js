@@ -42,8 +42,8 @@ export const RESTAURANT = gql`
 
 
 export const GET_LIQUORS = gql`
-    query getLiquors{
-        getLiquors{
+    query getLiquors($restaurantId: ID!){
+        getLiquors(restaurantId: $restaurantId){
             _id
             category
             name
@@ -54,8 +54,8 @@ export const GET_LIQUORS = gql`
 `
 
 export const GET_LIQUOR = gql`
-    query getLiquor($searchTerm: String!){
-        getLiquor(searchTerm: $searchTerm){
+    query getLiquor($searchTerm: String!, $restaurantId: ID!){
+        getLiquor(searchTerm: $searchTerm, restaurantId: $restaurantId){
             _id
             name
             stock
@@ -66,8 +66,8 @@ export const GET_LIQUOR = gql`
 `
 
 export const GET_EMPTY = gql`
-    query getEmptyRecords{
-        getEmptyRecords{
+    query getEmptyRecords($restaurantId: ID!){
+        getEmptyRecords(restaurantId: $restaurantId){
             _id 
             date
             emptyBottles{

@@ -1,11 +1,16 @@
 
 import { useQuery } from '@apollo/client';
-import { GET_EMPTY } from '../utils/queries';
+import { GET_EMPTY, RESTAURANT } from '../utils/queries';
 import { BarChart } from '@mui/x-charts';
 import { Box, Typography } from '@mui/material';
 
 export default function EmptyRecordsChart() {
-  const { loading, error, data } = useQuery(GET_EMPTY);
+  const { data: restaurantData } = useQuery(RESTAURANT);
+  const restaurantId = restaurantData?.getRestaurant?._id;
+
+  const { loading, error, data } = useQuery(GET_EMPTY, {
+    variables: { restaurantId },
+  });
 
   if (loading) return <Typography>Loading...</Typography>;
   if (error) return <Typography>Error: {error.message}</Typography>;

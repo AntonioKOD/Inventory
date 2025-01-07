@@ -11,7 +11,7 @@ export default defineConfig({
     proxy: {
       '/graphql':
       {
-        target:'http://localhost:3001',
+        target:'http://localhost:3000',
         secure: false,
         changeOrigin: true,
       }
