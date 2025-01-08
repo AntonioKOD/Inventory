@@ -6,7 +6,7 @@ import  BottomNavbar from './components/NavBar.jsx'
 
 
 const httpLink = createHttpLink({
-  uri: 'http://localhost:3001/graphql', // Absolute URL to your GraphQL endpoint
+  uri: '/graphql', // Absolute URL to your GraphQL endpoint
 });
 
 const authLink = setContext((_, {headers}) => {
