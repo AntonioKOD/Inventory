@@ -6,7 +6,7 @@ const { typeDefs, resolvers } = require('./schemas');
 const db = require('./config/connection');
 const { authMiddleware } = require('./utils/auth');
 const cors = require('cors'); // Import CORS
-const compression = require('compression');
+
 
 require('dotenv').config();
 
@@ -24,7 +24,6 @@ app.use(cors({
     credentials: true, // Allow credentials (cookies, headers, etc.)
 }));
 
-app.use(compression());
 
 const startApolloServer = async () => {
     await server.start();
