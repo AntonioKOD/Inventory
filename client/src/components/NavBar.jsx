@@ -15,17 +15,22 @@ import Auth from '../utils/auth';
 import { useQuery } from '@apollo/client';
 import { ME } from '../utils/queries';
 import { Autocomplete, TextField } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { loading, data } = useQuery(ME);
-
+  const { loading, data } = useQuery(ME, { fetchPolicy: 'cache-and-network' }); // Optimize with fetch policy
   const navigate = useNavigate();
 
   const user = data?.me;
+
+  useEffect(() => {
+    if (loading) {
+      console.log('Navbar is loading user data...');
+    }
+  }, [loading]);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -44,9 +49,6 @@ function ResponsiveAppBar() {
       navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
     }
   };
-
-  if (loading) return <h1>Loading...</h1>;
-  
 
   return (
     <AppBar position="fixed" sx={{ zIndex: 1201 }}>
@@ -87,7 +89,7 @@ function ResponsiveAppBar() {
                 freeSolo
                 id="search-bar"
                 disableClearable
-                options={[]} // Add options dynamically if needed
+                options={[]} // Placeholder for dynamic options
                 onInputChange={handleSearchChange}
                 renderInput={(params) => (
                   <TextField
@@ -105,6 +107,7 @@ function ResponsiveAppBar() {
                           onClick={() => {
                             if (searchTerm.trim()) {
                               console.log(`Search initiated for: ${searchTerm}`);
+                              navigate(`/search?q=${encodeURIComponent(searchTerm)}`);
                             }
                           }}
                         />
@@ -179,8 +182,8 @@ function ResponsiveAppBar() {
                 <Button onClick={Auth.logout} sx={{ my: 2, color: 'white', display: 'block' }}>
                   Logout
                 </Button>
-                <Link to="/me" style={{ textDecoration: 'none', color: 'white' }}>
-                  <Button sx={{ my: 2, color: 'white', display: 'block' }}>My Profile</Button>
+                <Link to="/dashboard" style={{ textDecoration: 'none', color: 'white' }}>
+                  <Button sx={{ my: 2, color: 'white', display: 'block' }}>View Dashboard</Button>
                 </Link>
               </>
             ) : (

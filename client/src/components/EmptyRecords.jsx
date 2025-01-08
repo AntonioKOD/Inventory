@@ -1,29 +1,31 @@
 import { useQuery } from "@apollo/client";
 import { GET_EMPTY, RESTAURANT } from "../utils/queries";
-import {
-  Container,
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-} from "@mui/material";
+import Container from "@mui/material/Container";
+import Box from "@mui/material/Box";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
 
 export default function EmptyRecords() {
+  // Fetch restaurant data
   const { data: restaurantData } = useQuery(RESTAURANT);
   const restaurantId = restaurantData?.getRestaurant?._id;
 
+  // Fetch empty records data
   const { loading, error, data } = useQuery(GET_EMPTY, {
     variables: { restaurantId },
-    
+    skip: !restaurantId, // Skip query if restaurantId is not available
   });
 
+  // Memoize records to prevent unnecessary re-renders
+  const records = data?.getEmptyRecords || [];
+
+  // Handle loading and error states after all hooks are called
   if (loading) return <Typography variant="h4">Loading...</Typography>;
   if (error) return <Typography variant="h4">{error.message}</Typography>;
-
-  const records = data?.getEmptyRecords;
 
   return (
     <Container maxWidth={false} sx={{ padding: 2 }}>
@@ -40,7 +42,7 @@ export default function EmptyRecords() {
           );
 
           return (
-            <Card key={record._id} sx={{ width: '100%', maxWidth: 800 }}>
+            <Card key={record._id} sx={{ width: "100%", maxWidth: 800 }}>
               <CardContent>
                 <Typography variant="h6" gutterBottom>
                   Date: {recordDate}

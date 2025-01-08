@@ -1,19 +1,16 @@
 import { useState } from 'react';
-import {
-  Container,
-  TextField,
-  Button,
-  Typography,
-  Box,
-  Grid,
-  Avatar,
-  Paper,
-} from '@mui/material';
+import Container from '@mui/material/Container';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Avatar from '@mui/material/Avatar';
+import Paper from '@mui/material/Paper';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useMutation } from '@apollo/client';
 import { REGISTER } from '../utils/mutations';
-import Auth from '../utils/auth'
-
+import Auth from '../utils/auth';
 
 export default function Signup() {
   const [formData, setFormData] = useState({

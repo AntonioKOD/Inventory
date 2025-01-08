@@ -1,9 +1,11 @@
 import { LOGIN } from "../utils/mutations";
-
 import { useMutation } from "@apollo/client";
 import { useState } from "react";
-import Auth from '../utils/auth'
-import { Box, TextField, Button, Typography } from '@mui/material';
+import Auth from "../utils/auth";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
 
 
 export default function Login(){

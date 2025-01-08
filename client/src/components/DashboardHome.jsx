@@ -1,191 +1,125 @@
-
+import { memo, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
-import { GET_EMPTY, RESTAURANT } from '../utils/queries';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Skeleton from '@mui/material/Skeleton';
 import { BarChart } from '@mui/x-charts';
-import { Box, Typography } from '@mui/material';
+import { GET_EMPTY, RESTAURANT } from '../utils/queries';
 
-export default function EmptyRecordsChart() {
+const DashboardHome = memo(function DashboardHome() {
   const { data: restaurantData } = useQuery(RESTAURANT);
   const restaurantId = restaurantData?.getRestaurant?._id;
 
   const { loading, error, data } = useQuery(GET_EMPTY, {
     variables: { restaurantId },
+    skip: !restaurantId,
   });
 
-  if (loading) return <Typography>Loading...</Typography>;
-  if (error) return <Typography>Error: {error.message}</Typography>;
+  const records = useMemo(() => data?.getEmptyRecords || [], [data]);
 
-  const records = data?.getEmptyRecords || [];
-
-  if (records.length === 0) {
-    return <Typography>No records available.</Typography>;
-  }
-
-  // Prepare data for the first chart
-  const chartData = records.flatMap((record) =>
-    record.emptyBottles.map((bottle) => ({
-      date: new Date(parseInt(record.date)).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-      liquorName: bottle.liquor.name,
-      quantity: bottle.quantity,
-    }))
-  );
-
-  // Extract unique liquor names for the x-axis
-  const liquorNames = [...new Set(chartData.map((item) => item.liquorName))];
-
-  // Aggregate quantities by liquor name
-  const aggregatedData = liquorNames.map((name) => {
-    const totalQuantity = chartData
-      .filter((item) => item.liquorName === name)
-      .reduce((sum, item) => sum + item.quantity, 0);
-    return { liquorName: name, quantity: totalQuantity };
-  });
-
-  // Prepare data for the second chart (aggregated by month)
-  const monthlyData = records.flatMap((record) =>
-    record.emptyBottles.map((bottle) => {
-      const date = new Date(parseInt(record.date));
-      const month = date.toLocaleString("en-US", { month: "short" });
-      const year = date.getFullYear();
-      return {
-        monthYear: `${month} ${year}`,
-        liquorName: bottle.liquor.name,
-        quantity: bottle.quantity,
-      };
-    })
-  );
-
-  // Extract unique months for the x-axis
-  const months = [...new Set(monthlyData.map((item) => item.monthYear))];
-
-  // Aggregate quantities by month and liquor name
-  const monthlyAggregatedData = months.map((month) => {
-    const liquorsInMonth = monthlyData.filter((item) => item.monthYear === month);
-    const liquorQuantities = liquorNames.map((name) => {
-      const totalQuantity = liquorsInMonth
-        .filter((item) => item.liquorName === name)
-        .reduce((sum, item) => sum + item.quantity, 0);
-      return totalQuantity;
+  const aggregatedData = useMemo(() => {
+    const liquorData = {};
+    records.forEach((record) => {
+      record.emptyBottles.forEach((bottle) => {
+        liquorData[bottle.liquor.name] =
+          (liquorData[bottle.liquor.name] || 0) + bottle.quantity;
+      });
     });
-    return { monthYear: month, quantities: liquorQuantities };
-  });
+    return Object.entries(liquorData).map(([liquorName, quantity]) => ({
+      liquorName,
+      quantity,
+    }));
+  }, [records]);
 
-  const categorizedMonthlyData = records.flatMap((record) =>
-    record.emptyBottles.map((bottle) => {
+  const monthlyData = useMemo(() => {
+    const monthData = {};
+    records.forEach((record) => {
       const date = new Date(parseInt(record.date));
-      const month = date.toLocaleString("en-US", { month: "short" });
-      const year = date.getFullYear();
-      return {
-        monthYear: `${month} ${year}`,
-        category: bottle.liquor.category,
-        quantity: bottle.quantity,
-      };
-    })
-  );
-  
-  // Extract unique months for the x-axis
-  const uniqueMonths = [...new Set(categorizedMonthlyData.map((item) => item.monthYear))];
-  
-  // Extract unique categories for the legend
-  const uniqueCategories = [...new Set(categorizedMonthlyData.map((item) => item.category))];
-  
-  // Aggregate quantities by month and category
-  const monthlyCategoryAggregatedData = uniqueMonths.map((month) => {
-    const categoriesInMonth = categorizedMonthlyData.filter((item) => item.monthYear === month);
-    const categoryQuantities = uniqueCategories.map((category) => {
-      const totalQuantity = categoriesInMonth
-        .filter((item) => item.category === category)
-        .reduce((sum, item) => sum + item.quantity, 0);
-      return totalQuantity;
+      const month = `${date.toLocaleString('en-US', { month: 'short' })} ${date.getFullYear()}`;
+      record.emptyBottles.forEach((bottle) => {
+        monthData[month] = monthData[month] || {};
+        monthData[month][bottle.liquor.name] =
+          (monthData[month][bottle.liquor.name] || 0) + bottle.quantity;
+      });
     });
-    return { monthYear: month, quantities: categoryQuantities };
-  });
+
+    const months = Object.keys(monthData);
+    const liquorNames = Array.from(
+      new Set(
+        Object.values(monthData)
+          .flatMap((liquor) => Object.keys(liquor))
+          .sort()
+      )
+    );
+
+    const chartData = months.map((month) =>
+      liquorNames.map((name) => monthData[month][name] || 0)
+    );
+
+    return { months, liquorNames, chartData };
+  }, [records]);
+
+  const renderChart = (title, data, xAxisLabel, yAxisLabel, xAxisData, series) => (
+    <Box sx={{ height: 400, marginBottom: 4 }}>
+      <Typography variant="h6" gutterBottom>
+        {title}
+      </Typography>
+      {loading ? (
+        <Skeleton variant="rectangular" width={800} height={400} />
+      ) : error ? (
+        <Typography color="error">{error.message}</Typography>
+      ) : records.length === 0 ? (
+        <Typography>No records available.</Typography>
+      ) : (
+        <BarChart
+          xAxis={[
+            {
+              label: xAxisLabel,
+              data: xAxisData,
+              scaleType: 'band',
+            },
+          ]}
+          yAxis={[
+            {
+              label: yAxisLabel,
+            },
+          ]}
+          series={series}
+          width={800}
+          height={400}
+        />
+      )}
+    </Box>
+  );
 
   return (
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ height: 400, marginBottom: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Empty Bottles by Liquor
-        </Typography>
-        <BarChart
-          xAxis={[
-            {
-              label: 'Liquor Name',
-              data: aggregatedData.map((item) => item.liquorName),
-              scaleType: 'band',
-            },
-          ]}
-          yAxis={[
-            {
-              label: 'Quantity',
-            },
-          ]}
-          series={[
-            {
-              data: aggregatedData.map((item) => item.quantity),
-              label: 'Quantity',
-            },
-          ]}
-          width={800}
-          height={400}
-        />
-      </Box>
-
-      <Box sx={{ height: 400 }}>
-        <Typography variant="h6" gutterBottom>
-          Monthly Liquor Consumption
-        </Typography>
-        <BarChart
-          xAxis={[
-            {
-              label: 'Month',
-              data: months,
-              scaleType: 'band',
-            },
-          ]}
-          yAxis={[
-            {
-              label: 'Quantity',
-            },
-          ]}
-          series={liquorNames.map((name, index) => ({
-            data: monthlyAggregatedData.map((item) => item.quantities[index]),
-            label: name,
-          }))}
-          width={800}
-          height={400}
-        />
-      </Box>
-      <Box sx={{ height: 400, marginTop: 4 }}>
-  <Typography variant="h6" gutterBottom>
-    Monthly Liquor Consumption by Category
-  </Typography>
-  <BarChart
-    xAxis={[
-      {
-        label: 'Month',
-        data: uniqueMonths,
-        scaleType: 'band',
-      },
-    ]}
-    yAxis={[
-      {
-        label: 'Quantity',
-      },
-    ]}
-    series={uniqueCategories.map((category, index) => ({
-      data: monthlyCategoryAggregatedData.map((item) => item.quantities[index]),
-      label: category,
-      stack: 'total', // This property ensures the bars are stacked
-    }))}
-    width={800}
-    height={400}
-  />
-</Box>
+      {renderChart(
+        'Empty Bottles by Liquor',
+        aggregatedData,
+        'Liquor Name',
+        'Quantity',
+        aggregatedData.map((item) => item.liquorName),
+        [
+          {
+            data: aggregatedData.map((item) => item.quantity),
+            label: 'Quantity',
+          },
+        ]
+      )}
+      {renderChart(
+        'Monthly Liquor Consumption',
+        monthlyData.chartData,
+        'Month',
+        'Quantity',
+        monthlyData.months,
+        monthlyData.liquorNames.map((name, index) => ({
+          data: monthlyData.chartData.map((month) => month[index]),
+          label: name,
+        }))
+      )}
     </Box>
   );
-}
+});
+
+export default DashboardHome;

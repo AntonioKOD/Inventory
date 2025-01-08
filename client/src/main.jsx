@@ -12,7 +12,6 @@ import { ThemeProvider, createTheme } from '@mui/material'
 import Signup from './components/Signup.jsx'
 import Login from './components/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
-import Manager from './pages/Manager.jsx'
 import SearchResults from './components/SearchResults.jsx'
 
 const theme = createTheme({
@@ -52,10 +51,6 @@ const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: <Dashboard/>
-      },
-      {
-        path: 'managerDashboard',
-        element: <Manager/>
       },
       {
         path: 'search',

@@ -1,17 +1,15 @@
-import {
-    Typography,
-    Container,
-    Grid,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    CardActions,
-    IconButton,
-  } from '@mui/material';
-  import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-  import InventoryIcon from '@mui/icons-material/Inventory';
-  import LiquorIcon from '@mui/icons-material/Liquor';
+import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import Grid from "@mui/material/Grid";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import CardActions from "@mui/material/CardActions";
+import IconButton from "@mui/material/IconButton";
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import LiquorIcon from "@mui/icons-material/Liquor";
 
   export default function Home() {
 

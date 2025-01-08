@@ -1,9 +1,14 @@
-import { TextField, Box, Container, Paper, Typography, Button } from "@mui/material";
-import { CREATE_USER } from "../utils/mutations";
+import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import Paper from "@mui/material/Paper";
+import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
 import { useMutation, useQuery } from "@apollo/client";
 import { useState } from "react";
-import Grid from '@mui/material/Grid2'
-import {RESTAURANT} from '../utils/queries'
+import { CREATE_USER } from "../utils/mutations";
+import { RESTAURANT } from "../utils/queries";
 
 
 export default function AddManager(){

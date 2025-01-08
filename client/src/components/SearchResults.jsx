@@ -2,7 +2,12 @@ import { useQuery, useMutation } from "@apollo/client";
 import { GET_LIQUOR, RESTAURANT } from "../utils/queries";
 import { UPDATE_STOCK } from "../utils/mutations";
 import { useSearchParams } from "react-router-dom";
-import { Box, Typography, Card, CardContent, TextField, Button } from "@mui/material";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 import { useState } from "react";
 
 
