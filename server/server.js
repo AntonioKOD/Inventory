@@ -20,7 +20,7 @@ const server = new ApolloServer({
 
 // Add CORS middleware
 app.use(cors({
-    origin: 'http://localhost:3000', // Replace with your frontend URL
+    origin: 'https://inventory-kzr2.onrender.com/', // Replace with your frontend URL
     credentials: true, // Allow credentials (cookies, headers, etc.)
 }));
 
