@@ -84,6 +84,7 @@ const typeDefs = `
         setEmptyBottles(input: [EmptyBottles!]!, restaurantId: ID!): [Empty!]!
         createUserAsAdmin(username:String!, email: String!,password: String!, role: String!, restaurantId: ID!): User
         updateStock(id: ID!, stock: Int!): Liquor
+        setEmptyBottle(liquorId: ID!, emptyBottles: Int!, restaurantId: ID!): Empty
     }
 
 `

@@ -211,6 +211,67 @@ const resolvers = {
         throw new Error('Failed to update stock');
       }
     },
+    setEmptyBottle: async (parent, { liquorId, emptyBottles, restaurantId }, context) => {
+      try {
+        // Ensure the count of empty bottles is valid
+        if (typeof emptyBottles !== 'number' || emptyBottles < 0) {
+          throw new Error('Invalid bottle count');
+        }
+    
+        // Find the restaurant
+        const restaurant = await Restaurant.findById(restaurantId);
+        if (!restaurant) {
+          throw new Error('Restaurant not found');
+        }
+    
+        // Get today's date with time reset to 00:00
+        const effectiveDate = new Date();
+        effectiveDate.setHours(0, 0, 0, 0);
+    
+        // Find or create the empty record for today
+        let emptyRecord = await Empty.findOne({ date: effectiveDate, restaurant: restaurantId });
+        if (!emptyRecord) {
+          emptyRecord = await Empty.create({ date: effectiveDate, restaurant: restaurantId, emptyBottles: [] });
+        }
+    
+        // Find the liquor
+        const liquor = await Liquor.findById(liquorId);
+        if (!liquor) {
+          throw new Error(`Liquor with ID ${liquorId} not found`);
+        }
+    
+        // Check stock availability
+        if (liquor.stock < emptyBottles) {
+          throw new Error('Insufficient stock');
+        }
+    
+        // Update the stock of the liquor
+        liquor.stock -= emptyBottles;
+        await liquor.save();
+    
+        // Update or add the liquor in the empty record
+        const existingBottleIndex = emptyRecord.emptyBottles.findIndex(
+          (bottle) => String(bottle.liquor) === String(liquorId)
+        );
+    
+        if (existingBottleIndex > -1) {
+          // Update existing bottle quantity
+          emptyRecord.emptyBottles[existingBottleIndex].quantity += emptyBottles;
+        } else {
+          // Add a new bottle entry
+          emptyRecord.emptyBottles.push({ liquor: liquorId, quantity: emptyBottles });
+        }
+    
+        // Save the updated empty record
+        await emptyRecord.save();
+    
+        // Return the updated record
+        return await Empty.findById(emptyRecord._id).populate('emptyBottles.liquor');
+      } catch (error) {
+        console.error('Error setting empty bottle:', error);
+        throw new Error('Failed to set empty bottle');
+      }
+    },
   },
 };
 

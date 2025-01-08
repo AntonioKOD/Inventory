@@ -106,3 +106,22 @@ export const EMPTY_BOTTLES = gql`
     }
   }
 `;
+
+export const ADD_SINGLE_EMPTY_BOTTLE = gql`
+  mutation setEmptyBottle($liquorId: ID!, $emptyBottles: Int!, $restaurantId: ID!) {
+    setEmptyBottle(liquorId: $liquorId, emptyBottles: $emptyBottles, restaurantId: $restaurantId) {
+      _id          # ID of the Empty record
+      date         # Date for the record
+      emptyBottles {
+        liquor {   # Liquor details for each empty bottle entry
+          _id
+          name
+          category
+          price
+          stock
+        }
+        quantity   # Number of empty bottles for the liquor
+      }
+    }
+  }
+`;
