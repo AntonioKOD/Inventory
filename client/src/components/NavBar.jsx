@@ -12,25 +12,17 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import AdbIcon from '@mui/icons-material/Adb';
 import Auth from '../utils/auth';
-import { useQuery } from '@apollo/client';
-import { ME } from '../utils/queries';
+
 import { Autocomplete, TextField } from '@mui/material';
-import { useState, useEffect } from 'react';
+import { useState} from 'react';
 import SearchIcon from '@mui/icons-material/Search';
 
 function ResponsiveAppBar() {
-  const [anchorElNav, setAnchorElNav] = React.useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { loading, data } = useQuery(ME, { fetchPolicy: 'cache-and-network' }); // Optimize with fetch policy
+  const [anchorElNav, setAnchorElNav] = useState(null);
+  const [searchTerm, setSearchTerm] = useState(''); // Optimize with fetch policy
   const navigate = useNavigate();
 
-  const user = data?.me;
 
-  useEffect(() => {
-    if (loading) {
-      console.log('Navbar is loading user data...');
-    }
-  }, [loading]);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -73,8 +65,7 @@ function ResponsiveAppBar() {
             Inventory App
           </Typography>
 
-          {/* Admin-only Search Bar */}
-          {Auth.loggedIn() && user?.role === 'admin' && (
+        
             <Box
               sx={{
                 flexGrow: 1,
@@ -117,7 +108,7 @@ function ResponsiveAppBar() {
                 )}
               />
             </Box>
-          )}
+          
 
           {/* Mobile Menu */}
           <Box sx={{ display: { xs: 'flex', md: 'none' }, flexGrow: 1 }}>

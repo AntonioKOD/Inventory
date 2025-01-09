@@ -38,16 +38,23 @@ const resolvers = {
     getRestaurant: async (_, __, context) => {
       if (!context.user) throw new Error('Authentication required');
       try {
+        console.log('Context user:', context.user); // Debugging context
         const user = await User.findById(context.user._id);
+        if (!user) throw new Error('User not found');
+        
+        console.log('Fetched user:', user); // Debugging user data
         const query = user.role === 'admin'
           ? { admin: user._id }
           : { managers: { $in: [user._id] } };
-
+    
         const restaurant = await Restaurant.findOne(query)
           .populate('admin', 'username email role')
           .populate('managers', '_id username email role')
           .populate('liquors', '_id name stock price');
-
+    
+        console.log('Fetched restaurant:', restaurant); // Debugging restaurant data
+    
+        if (!restaurant) throw new Error('Restaurant not found');
         return restaurant;
       } catch (error) {
         console.error('Error fetching restaurant:', error);
@@ -98,18 +105,44 @@ const resolvers = {
     },
     login: async (parent, { email, password }) => {
       try {
+        console.log('Attempting to log in user with email:', email);
+    
+        // Find the user by email
         const user = await User.findOne({ email });
-        if (!user) throw new Error('No user found');
-        if (!(await user.isCorrectPassword(password))) throw new Error('Incorrect credentials');
-
-        const restaurant = await Restaurant.findOne({ admin: user._id })
-          .populate('admin', '_id username email role')
-          .populate('managers', '_id username email role')
-          .populate('liquors', '_id name stock price');
-
-        return { token: signToken(user), user, restaurant };
+        if (!user) {
+          console.error('No user found with email:', email);
+          throw new Error('No user found');
+        }
+    
+        // Validate password
+        const isPasswordValid = await user.isCorrectPassword(password);
+        if (!isPasswordValid) {
+          console.error('Incorrect password for user:', email);
+          throw new Error('Incorrect credentials');
+        }
+    
+        console.log('User authenticated:', user);
+    
+        // Fetch the restaurant based on user role
+        let restaurant;
+        if (user.role === 'admin') {
+          restaurant = await Restaurant.findOne({ admin: user._id });
+        } else if (user.role === 'manager') {
+          restaurant = await Restaurant.findOne({ managers: user._id });
+        }
+    
+        if (!restaurant) {
+          console.error('Restaurant not found for user:', user._id);
+          throw new Error('Restaurant not found');
+        }
+    
+        console.log('Restaurant fetched:', restaurant);
+    
+        // Generate token and return response
+        const token = signToken(user);
+        return { token, user, restaurant };
       } catch (error) {
-        console.error('Error logging in:', error);
+        console.error('Error during login:', error);
         throw new Error('Failed to log in');
       }
     },
@@ -148,7 +181,7 @@ const resolvers = {
         if (await User.findOne({ email })) throw new Error('User with this email already exists');
 
         const newUser = await User.create({ username, email, password, role, restaurant: restaurant._id });
-        if (role === 'manager') restaurant.managers.push(newUser._id);
+        if (role === 'Manager' || role === 'manager') restaurant.managers.push(newUser._id);
         await restaurant.save();
 
         return newUser;
