@@ -10,7 +10,9 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import { useQuery } from "@apollo/client";
 import { ME } from "../utils/queries";
 
+
 // Lazy load heavy components
+const UpdateManager = React.lazy(() => import("./UpdateManager"));
 const AddManager = React.lazy(() => import("./AddManager"));
 const AddLiquor = React.lazy(() => import("./AddLiquor"));
 const Empty = React.lazy(() => import("./Empty"));
@@ -45,6 +47,13 @@ export default function FixedBar() {
                 value="record"
                 icon={<InventoryIcon style={{ width: 24, height: 24 }} />}
             />,
+            <BottomNavigationAction
+                key="update-manager"
+                label="Update Manager"
+                value="update-manager"
+                icon={<PersonAddAltIcon style={{ width: 24, height: 24 }} />}
+            />
+
         ] : [];
     }, [user?.role]);
 
@@ -61,6 +70,8 @@ export default function FixedBar() {
                 return <DashboardHome />;
             case 'record':
                 return <EmptyRecords />;
+            case 'update-manager':
+                return <UpdateManager />;
             default:
                 return null;
         }

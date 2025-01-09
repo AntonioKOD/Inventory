@@ -85,6 +85,14 @@ const resolvers = {
         throw new Error('Failed to fetch empty records');
       }
     },
+    getUsers: async (parent, { restaurantId }) => {
+      try {
+        return await User.find({ restaurant: restaurantId });
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        throw new Error('Failed to fetch users');
+      }
+    }
   },
 
   Mutation: {
@@ -305,6 +313,111 @@ const resolvers = {
         throw new Error('Failed to set empty bottle');
       }
     },
+    updateManager: async (parent, { userId, restaurantId, email, username, role }, context) => {
+      try {
+        // Ensure the requesting user has admin privileges
+        const requestingUser = await User.findById(context.user._id);
+        if (!requestingUser || requestingUser.role !== 'admin') {
+          throw new Error('Admin privileges required');
+        }
+    
+        // Verify the restaurant exists
+        const restaurant = await Restaurant.findById(restaurantId).populate('managers', 'username email role');
+        if (!restaurant) {
+          throw new Error('Restaurant not found');
+        }
+    
+        // Ensure the user is authorized to manage this restaurant
+        if (String(restaurant.admin) !== String(requestingUser._id)) {
+          throw new Error('Unauthorized');
+        }
+    
+        // Fetch the user to update and ensure they are a manager
+        const user = await User.findById(userId);
+        if (!user) {
+          throw new Error('User not found');
+        }
+    
+        const isManager = restaurant.managers.some(
+          (manager) => String(manager._id) === String(user._id)
+        );
+        if (!isManager) {
+          throw new Error('User is not a manager for this restaurant');
+        }
+    
+        // Update user details if provided
+        if (email) user.email = email;
+        if (username) user.username = username;
+        if (role) {
+          if (!['manager', 'admin'].includes(role.toLowerCase())) {
+            throw new Error('Invalid role specified');
+          }
+          user.role = role.toLowerCase();
+        }
+    
+        await user.save();
+    
+        // If the role is changed to something other than 'manager', remove from restaurant managers
+        if (role && role.toLowerCase() !== 'manager') {
+          restaurant.managers = restaurant.managers.filter(
+            (manager) => String(manager._id) !== String(user._id)
+          );
+          await restaurant.save();
+        }
+    
+        // Return the updated restaurant
+        const updatedRestaurant = await Restaurant.findById(restaurantId)
+          .populate('admin', 'username email role')
+          .populate('managers', '_id username email role')
+          .populate('liquors', '_id name stock price');
+    
+        if (!updatedRestaurant.name) {
+          throw new Error('Restaurant name is missing');
+        }
+    
+        return updatedRestaurant;
+      } catch (error) {
+        console.error('Error updating manager:', error);
+        throw new Error('Failed to update manager');
+      }
+    },
+    removeManager: async (_, { restaurantId, userId }) => {
+      if (!userId) {
+          throw new Error('Invalid manager ID');
+      }
+  
+      try {
+          // Find the restaurant
+          const restaurant = await Restaurant.findById(restaurantId);
+          if (!restaurant) {
+              throw new Error('Restaurant not found');
+          }
+  
+          // Ensure the manager exists in the restaurant's managers array
+          if (!restaurant.managers.includes(userId)) {
+              throw new Error('Manager not associated with this restaurant');
+          }
+  
+          // Remove the manager from the restaurant's managers array
+          restaurant.managers = restaurant.managers.filter(
+              (managerId) => String(managerId) !== String(userId)
+          );
+          await restaurant.save();
+  
+          // Delete the manager's user account
+          const deletedUser = await User.findByIdAndDelete(userId);
+          if (!deletedUser) {
+              throw new Error('User not found or already deleted');
+          }
+  
+          console.log(`Deleted user: ${deletedUser.username}`);
+  
+          return restaurant;
+      } catch (error) {
+          console.error('Error removing manager:', error);
+          throw new Error('Failed to remove manager');
+      }
+  },
   },
 };
 

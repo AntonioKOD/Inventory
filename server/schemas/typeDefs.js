@@ -14,7 +14,7 @@ const typeDefs = `
         address: String!
         state: String!
         admin: User!
-        managers: [User]
+        managers: [User!]!
         liquors: [Liquor]
         
     }
@@ -52,6 +52,7 @@ const typeDefs = `
         getRestaurant: Restaurant
         getLiquor(searchTerm: String!, restaurantId: ID!): [Liquor]
         getEmptyRecords(restaurantId: ID!): [Empty]
+        getUsers(restaurantId: ID!): [User]
 
     }
 
@@ -85,6 +86,9 @@ const typeDefs = `
         createUserAsAdmin(username:String!, email: String!,password: String!, role: String!, restaurantId: ID!): User
         updateStock(id: ID!, stock: Int!): Liquor
         setEmptyBottle(liquorId: ID!, emptyBottles: Int!, restaurantId: ID!): Empty
+        updateManager(restaurantId: ID!, userId: ID!, email: String, username: String, role: String): Restaurant
+        removeManager(restaurantId: ID!, userId: ID!): Restaurant
+
     }
 
 `

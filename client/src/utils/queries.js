@@ -83,4 +83,16 @@ export const GET_EMPTY = gql`
     }
 `
 
+export const GET_USERS = gql`
+    query getUsers($restaurantId: ID!){
+        getUsers(restaurantId: $restaurantId){
+            _id
+            username
+            email
+            role
+        }
+    }
+`
+
+
 

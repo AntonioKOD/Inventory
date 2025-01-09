@@ -125,3 +125,45 @@ export const ADD_SINGLE_EMPTY_BOTTLE = gql`
     }
   }
 `;
+
+export const UPDATE_MANAGER = gql`
+  mutation UpdateManager(
+    $restaurantId: ID!
+    $userId: ID!
+    $email: String
+    $username: String
+    $role: String
+  ) {
+    updateManager(
+      restaurantId: $restaurantId
+      userId: $userId
+      email: $email
+      username: $username
+      role: $role
+    ) {
+      _id
+      name
+      managers {
+        _id
+        username
+        email
+        role
+      }
+    }
+  }
+`;
+
+export const REMOVE_MANAGER = gql` 
+    mutation RemoveManager($restaurantId: ID!, $userId: ID!){
+        removeManager(restaurantId: $restaurantId, userId: $userId){
+            _id
+            name
+            managers{
+                _id
+                username
+                email
+                role
+            }
+        }
+    }
+`
