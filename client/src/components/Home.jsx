@@ -10,8 +10,18 @@ import IconButton from "@mui/material/IconButton";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import LiquorIcon from "@mui/icons-material/Liquor";
+import {ME} from '../utils/queries';
+import {useQuery} from '@apollo/client';
+
 
   export default function Home() {
+    const { loading, error, data } = useQuery(ME);
+    const user = data?.me || null;
+
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error loading user data</p>;
+
+
 
     return (
       <>
@@ -30,6 +40,7 @@ import LiquorIcon from "@mui/icons-material/Liquor";
             boxShadow: 3,
           }}
         >
+        {user && user.username === 'Pirjen' ? <Typography variant="h2" component="h1" gutterBottom color="primary.main"> Sheno shpejt, mer Pederast</Typography> : <Typography variant="h2" component="h1" gutterBottom color="primary.main"> Welcome to Liquor Inventory App </Typography>}
           <Typography variant="h2" component="h1" gutterBottom color="primary.main">
             Manage Your Liquor Inventory with Ease
           </Typography>
